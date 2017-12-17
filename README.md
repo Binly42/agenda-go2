@@ -5,15 +5,29 @@
 
  agenda-go2 是在 [agenda-go](https://github.com/Binly42/agenda-go) 的基础上继续开发作业的, 对应 pml老师 的 [这篇博客](http://blog.csdn.net/pmlpml/article/details/78727210) 及 `ex-service-agenda.html`(*服务程序开发实战 - Agenda*) 。
 
-## 下载
+
+## 获取 代码
 
 ```shell
-go get -u github.com/Binly42/agenda-go2
+go get -u github.com/Binly42/agenda-go2/...
+```
+
+## 获取 docker 镜像
+
+```shell
+sudo docker pull binly/agenda-go2
 ```
 
 
+## *service* 用法
 
-## 用法
+```shell
+Usage:
+  -p string
+        The PORT to be listened by agenda. (default "8080")
+```
+
+## *cli* 用法
 
 ```shell
 Usage:
@@ -55,41 +69,30 @@ Root Flags:
 
 Use "agenda [command] --help" for more information about a command.
 ```
-## 实现原理
 
- 大致上:
 
-> + entity 包中实现基本数据结构 User, Meeting, UserList, MeetingList 等, 同时也实现了 agenda 系统中需要它们具备的功能, 基本是根据作业要求的 html 上的 "附件: Agenda 业务需求" 来划分的; 业务操作中只要是在语义上足够合理的, 都会实现成 一个 User 作为 actor 调用其对应的方法完成该事物 的模式, 比如: `user.CancelAccount()` 这样, 但是与此同时, 与 agenda 有关的具体逻辑, 则不在 entity 包中实现 ;
+## service 实现原理
 
-> + 与 agenda 有关的具体逻辑, 在 agenda 包中实现, 其中的业务操作(只要合理)都假设 当前登录用户(通过 `LoginedUser()` 得到) 作为执行者, 从而, 由执行者调用其对应方法 ;
+ 大致上, 与 [agenda-go](https://github.com/Binly42/agenda-go) 的区别主要有:
 
-> *  entity 包中已实现各个对象的 序列化/反序列化 和 输入/输出 操作, 但是还是要由 model 包中的具体实现传入 (绑定好文件的) encoder/decoder 才能完成事实上的文件读写(比如 将一个 UserList 保存到文件中) ;
+> * 借助 **gorm** 与 splite3 数据库 进行交互, 具体实现包装在 [*model* 模块](https://github.com/Binly42/agenda-go2/tree/master/service/vendor/model), 由某个 *service* 模块 中提供的 各项 service 调用, 这里还没分得那么细 ... 所以 *service* 也直接放在 [*agenda* 模块](https://github.com/Binly42/agenda-go2/tree/master/service/vendor/agenda) 中了 ... ;
 
-> * 理想情况下, 面向用户端的 UI 部分应该只直接导入 agenda 包中暴露的接口 ;
+> * 本来打算沿用 *User as Actor* 形式的, 这里还没有作适配, 所以也基本没有 log ... ;
 
-> *  其他细节, 基本按照作业要求的 html 上的内容进行 ;
-
-> + 具体的 CLI 接口和命令的解析等, 由 [LIANGTJ]( https://github.com/LIANGTJ) 完成, 其针对不同命令调用 agenda 包中的不同接口 ;
+> * server 方面, 则直接在 对请求作点处理 之后 调用 各项 service ;
 
 
 
 ## 样例
 
-启动服务器：
-
+先把镜像跑起来:
 ```shell
-liangtj@ubuntu:~/Desktop/GoWorkSpace/src/github.com/LIANGTJ/agenda-go2/service$ go run main.go 
-[info]2017/12/16 07:28:59 server.go:29: Listtening addr: :8080
-Listtening addr: :8080
-[error]2017/12/16 07:30:16 action.go:21: UNIQUE constraint failed: user_infos.name
-
-(UNIQUE constraint failed: user_infos.name) 
-[2017-12-16 07:30:16]  
-
-
+sudo docker run -it -p 8080:8080 binly/agenda-go2
 ```
-
-
+再在容器内启动服务器:
+```shell
+service -p 8080
+```
 
 register 
 
